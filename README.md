@@ -9,6 +9,17 @@ it features derived attributes supported by an xpath macro language, more expres
 It includes all the features of ERScript but also enables the auto-generation of ER diagrams from entity model structure. Diagrams are represented in the
 [Diagramming Model](www.github.com/JohnWCartmell/DiagrammingLogicModel).
 
+### Requirements
+* enable diagram-less entity modelling
+* optionally enable one or more ER(A) diagrams to present a model or part of a model  
+* support automatic generation of an ER diagram from the pure structure of an ER model
+	* support user to improve automated presentation
+* source xslt transforms as rules represented in xml described by rules entity model
+* factor transform logic so that all that can be represented as derivation of entities, relationships and attributes is represented as derivation of entities, relationships and attributes
+  * an example of a derived entity would be a foreign key attribute such as currently created in the ERmodel2.physical_enrichment.module.xslt
+  * this may be difficult to describe within entity logic 
+   * though maybe it can be constructed by pullback which would be quite something wouldn't it?
+
 ## Current State
 ### SubFolder  ERmodel_v2.1/ERmodelxslt
 Contains a rudimentary xslt transformations for
