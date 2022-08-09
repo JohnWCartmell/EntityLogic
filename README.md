@@ -9,8 +9,8 @@ it features derived attributes supported by an xpath macro language, more expres
 It includes all the features of ERScript but also enables the auto-generation of ER diagrams from entity model structure. Diagrams are represented in the
 [Diagramming Model](www.github.com/JohnWCartmell/DiagrammingLogicModel).
 
-##Current State
-###SubFolder  ERmodel_v2.1/ERmodelxslt
+## Current State
+### SubFolder  ERmodel_v2.1/ERmodelxslt
 Contains a rudimentary xslt transformations for
 * autogeneration of an instance of the diagram model from a diagram-free entity model
   * as at now in August 2022 the input entity model is required to be an instance of ERmodelv1.2 (it is not required to have any diagramming information -- if it has then it should be ignored )
