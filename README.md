@@ -7,7 +7,7 @@ Additional tranformation logic is supported in that
 it features derived attributes supported by an xpath macro language, more expressive derived relationships and rules for structure eleboration.
 
 It includes all the features of ERScript but also enables the auto-generation of ER diagrams from entity model structure. Diagrams are represented using
-[DiagrammingByEnrichment](www.github.com/JohnWCartmell/DiagrammingByEnrichment).
+[DiagrammingByEnrichment](https://www.github.com/JohnWCartmell/DiagrammingByEnrichment).
 
 ### Requirements
 * enable diagram-less entity modelling
