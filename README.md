@@ -23,7 +23,7 @@ It includes all the features of ERScript but also enables the auto-generation of
 ## Current State
 
 ### Source Code Subfolders
-* scripts -- contains source scripts for build of distribution and for building examples. I might be able to make more separation here but not necesarily so as EntityLogic will be used to build itself.
+* scripts -- contains source scripts for building examples. I might be able to make more separation here but not necesarily so as EntityLogic will be used to build itself.
 
 * src -- contains source code 
   * metamodel -- contains entity model represented in xml inclusive of rules for derived structure, relationships and attributes.
