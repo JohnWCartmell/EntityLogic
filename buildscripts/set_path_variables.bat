@@ -1,0 +1,2 @@
+SET CLOUDWORK=../../..
+SET ERSCRIPTV1=%CLOUDWORK%/Scripting/ERScript_r4

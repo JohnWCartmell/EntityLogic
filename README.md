@@ -21,6 +21,21 @@ It includes all the features of ERScript but also enables the auto-generation of
    * though maybe it can be constructed by pullback which would be quite something wouldn't it?
 
 ## Current State
+
+### Source Code Subfolders
+* scripts -- contains source scripts for build of distribution and for building examples. I might be able to make more separation here but not necesarily so as EntityLogic will be used to build itself.
+
+* src -- contains source code 
+  * metamodel -- contains entity model represented in xml inclusive of rules for derived structure, relationships and attributes.
+  * xslt -- all source xslt - includes bootstrap xslt used to realise derived structure, relationships and attributes.
+  * buildscripts -- scripts to build EntityLogic -- currently these use ERSrcipt v1.4.
+
+### The following subfolders do NOT contain source code
+* xslt -- contains run time xslt 
+* bin -- contains generated rng file
+* temp -- contains temporary files
+* docs -- contains generated documents
+
 ### SubFolder  ERmodel_v2.1/ERmodelxslt
 Contains a rudimentary xslt transformations for
 * autogeneration of an instance of the diagram model from a diagram-free entity model
