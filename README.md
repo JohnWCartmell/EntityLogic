@@ -1,7 +1,7 @@
 # EntityLogic
 An ERmodel based scripting toolset. 
 
-This is a new and more capable development of the [ERScript] concept.
+This is a new and more capable development of the [ERScript](ERScript) concept.
 
 Additional tranformation logic is supported in that 
 it features derived attributes supported by an xpath macro language, more expressive derived relationships and rules for structure eleboration.
