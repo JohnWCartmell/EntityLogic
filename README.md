@@ -1,7 +1,7 @@
 # EntityLogic
 An ERmodel based scripting toolset. 
 
-This is a new and more capable development of the [ERScript] concept.
+This is a new and more capable development of the [ERScript](ERScript) concept.
 
 Additional tranformation logic is supported in that 
 it features derived attributes supported by an xpath macro language, more expressive derived relationships and rules for structure eleboration.
@@ -10,12 +10,12 @@ It includes all the features of ERScript but also enables the auto-generation of
 [DiagrammingByEnrichment](https://www.github.com/JohnWCartmell/DiagrammingByEnrichment).
 
 ### Requirements
-* enable diagram-less entity modelling
-* optionally enable one or more ER(A) diagrams to present a model or part of a model  
+* enable diagram-less entity modelling,
+* optionally enable one or more ER(A) diagrams to present a model or part of a model, 
 * support automatic generation of an ER diagram from the pure structure of an ER model
-	* support user to improve automated presentation
-* source xslt transforms as rules represented in xml described by rules entity model
-* factor transform logic so that all that can be represented as derivation of entities, relationships and attributes is represented as derivation of entities, relationships and attributes
+	* support user to improve automated presentation,
+* source xslt transforms as rules represented in xml described by rules entity model,
+* factor transform logic so that all that *can be* represented as derivation of entities, relationships and attributes *is* so represented,
   * an example of a derived entity would be a foreign key attribute such as currently created in the ERmodel2.physical_enrichment.module.xslt
   * this may be difficult to describe within entity logic 
    * though maybe it can be constructed by pullback which would be quite something wouldn't it?
@@ -36,14 +36,13 @@ It includes all the features of ERScript but also enables the auto-generation of
 * temp -- contains temporary files
 * docs -- contains generated documents
 
-### SubFolder  ERmodel_v2.1/ERmodelxslt
+### SubFolder  src/FirstCutDiagramxslt
 Contains a rudimentary xslt transformations for
 * autogeneration of an instance of the diagram model from a diagram-free entity model
   * as at now in August 2022 the input entity model is required to be an instance of ERmodelv1.2 (it is not required to have any diagramming information -- if it has then it should be ignored )
   * I am considering pausing this development so that I can progress the pure entity logic idea and re-source this work using entity logic.
+  * 
 ### Way forward
-Have a separate EntityLogic repository
-* Create this by extracting diagram free parts of ERmodel v1.4.
 * For a time the metamodel of ER logic will be described as an instance of ERmodel v1.4. One advantage of this is so that I can have a diagram of this metamodel. 
 
 #### The ERmodel v1.4 meta model
