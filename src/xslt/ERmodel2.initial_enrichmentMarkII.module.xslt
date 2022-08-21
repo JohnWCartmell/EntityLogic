@@ -11,6 +11,7 @@
 16-Aug-2022 J Cartmell Recode into a pure style - one attribute per template.
                        Merge initial pass and recursive pass into a single recursive path.
                        Do this incrementally moving one or two attributes at a time into recurivse path.
+                       Change to enable a trace attribute to be generated and preserved.
 -->
 
 <!-- 
@@ -120,7 +121,7 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
    <xsl:variable name ="next">
       <xsl:for-each select="$interim">
          <xsl:copy>
-           <xsl:apply-templates mode="initial_enrichment_recursive"/>
+           <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
          </xsl:copy>
       </xsl:for-each>
    </xsl:variable>
@@ -162,23 +163,25 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
 </xsl:template>
 
 <!-- recursive enrichment starts here -->
+<!-- FOLOWING HAS BEEN RECODED IN meta model -->
 <xsl:template match="*[self::absolute|self::entity_type]
                      [not(identifier)]
                      "
               mode="initial_enrichment_recursive"
               priority="2">
   <xsl:copy>
-      <identifier>
+      <identifier trace="2">
           <xsl:value-of select="translate(replace(name,'\((\d)\)','_$1'),
                                           ' ',
                                           '_'
                                          )
                                "/>
       </identifier>
-      <xsl:apply-templates mode="initial_enrichment_recursive"/>
+      <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
   </xsl:copy>
 </xsl:template>
 
+<!-- FOLOWING HAS BEEN RECODED IN meta model -->
 <xsl:template match="*[self::absolute|self::entity_type]
                       [not(elementName)]
                       " mode="initial_enrichment_recursive"
@@ -191,9 +194,10 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
                                          )
                                "/>
        </elementName>
-    <xsl:apply-templates mode="initial_enrichment_recursive"/>
+    <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
   </xsl:copy>
 </xsl:template>
+
 
 <xsl:template match="composition
                      [not(id)]
@@ -205,7 +209,7 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
           <xsl:text>S</xsl:text>  <!-- S for structure -->
           <xsl:number count="composition" level="any" />
        </id>
-       <xsl:apply-templates mode="initial_enrichment_recursive"/>
+       <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
     </xsl:copy>
 </xsl:template>
 
@@ -218,11 +222,12 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
           <xsl:text>R</xsl:text>
           <xsl:number count="reference" level="any" />
        </id>
-       <xsl:apply-templates mode="initial_enrichment_recursive"/>
+       <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
     </xsl:copy>
 </xsl:template>
 
-
+<!-- IS THE FOLLOWING USED
+COMMENT OUT AND FIND OUT
 <xsl:variable name="keywords" as="xs:string *">
    <xsl:sequence select="
           '', 'do', 'if', 'in', 'for', 'let', 'new', 'try', 'var', 'case',
@@ -233,9 +238,10 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
           'package', 'private', 'continue', 'debugger', 'function', 'arguments',
           'interface', 'protected', 'implements', 'instanceof'   "/>
 </xsl:variable>
+-->
 
 <!-- in the logic below there were two cases prior to 16 Aug 2022
-      one case used outgoing depdency and its type and other incoming compsoition
+      one case used outgoing dependency and its type and other incoming composition
        we cannot rely on dependency/type because this isnt present for compositions from absolute
                   so why not just rely on incoming compositions?
                   -->
@@ -244,13 +250,26 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
                      " 
               mode="initial_enrichment_recursive"
               priority="6">
-   <xsl:copy>
+   <xsl:copy> 
       <parentType> 
          <xsl:value-of select="string-join(key('IncomingCompositionRelationships',
                                        ancestor-or-self::entity_type/name)/../name,
                                      ' | ')"/>
       </parentType>
-       <xsl:apply-templates mode="initial_enrichment_recursive"/>
+      <!-- 
+        Define
+        all_incoming_composition_relationships 
+        = (ancestor_or_self::entity_type)/incoming_composition_relationships
+
+        and
+
+        source_types_of_all_incoming_composition_relationships
+        = all_incoming_composition_relationships/..
+
+        parentType is then the macro
+        string-join(#source_types_of_all_incoming_composition_relationships/$$name,' | ')
+        -->
+       <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
    </xsl:copy>
 </xsl:template>
 
@@ -262,10 +281,47 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
                      [not(identifying)]
                      "
               mode="initial_enrichment_recursive"
-              priority="7"> 
+              priority="7">
+  <!-- The above follows the 'inverse' reference relationship. -->
+  <!-- Thinking about abstracting this I am struck by the fact that I
+       have removed enumeration attributes from the model and replaced them
+       by very simple compositional structure (universals). With respect of the
+       old meta-model this template could be represented as the derivation of 
+       a derived attribute. In the new meta-model it needs to be represented as
+       a derived compositional structure. How do we meta-model this?
+       Should start by documenting the difference between pullback and copy.
+       Initial guess but now need to read the code.
+
+       a copy is a pullback plus copy of all attributes, reference relationships 
+       and compositional structure. (CHECK that copy is implemented in xslt
+       ...it was introduced for use in js in car).
+       If this is the difference between the two then for a composition such as 
+       this, i.e. that represents one of a set of enumerated values 
+       (actually a flag in this very case) then pullback is the same as copy.
+       The pullback diagram is this:
+                               inverse
+                  dependency :::::::::::::> composition
+                     |                           |
+                     |                           |
+                     |                           |
+                     =                           =
+                     .                           .
+                identifying  :::::::::::>  identifying
+                              sourced_at
+       The projection rel which I have named 'source_at' isn't currently modelled. 
+       And this rel doesn't have anything you could point to and say that it has 
+       a foreign key. It does have a diagonal and a riser.
+       With it being so sketchy might use a different indictor beside either pullback
+       or copy to represent it this construction and not to mandate an explicit 
+       representation of this projection relationship. Though actually isn't this
+       vital to how the pullback is modelled. Not a bad idea to test that logical
+       to physical allright with keyless relationships like this one.
+       Also we are going to have to split the identifying entity type in two. 
+       One on left underneath dependency and one on right beneath composition.
+  -->  
   <xsl:copy>
       <identifying/>
-      <xsl:apply-templates mode="initial_enrichment_recursive"/>
+      <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
    </xsl:copy>
 </xsl:template>
 
@@ -275,16 +331,25 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
               [not(projection)]" 
               mode="initial_enrichment_recursive" 
               priority="6">
+   <!-- The above tests are 
+              [inverse(projection_rel) defined]
+              [not(projection)] 
+        There is an assumption here that inverse(projection_rel) is single valued
+        but in the meta-model it is shown as many-valued.
+        Is it the case that its inverse should be explicitly defined in order to specify
+        single-valuedness? I think so.
+        Lower down the projection has a host_type calculated.
+   -->
    <xsl:copy>
        <projection/>
-       <xsl:apply-templates mode="initial_enrichment_recursive"/>
+       <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
    </xsl:copy>
 </xsl:template>
 
-<xsl:template match="*"
+<xsl:template match="@*|node()"
               mode="initial_enrichment_recursive"> 
   <xsl:copy>
-    <xsl:apply-templates mode="initial_enrichment_recursive"/>
+    <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
   </xsl:copy>
 </xsl:template>
 
@@ -297,13 +362,25 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
               priority="999"
               mode="initial_enrichment_recursive"> 
   <xsl:copy>
-     <xsl:apply-templates mode="initial_enrichment_recursive"/>
+     <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
           <xsl:variable name="operator" select="if (cardinality/ZeroOrOne or cardinality=ZeroOneOrMore) then '=' else 'LTEQ'"/>  
                    <!-- 13-Oct-2017  'LTEQ' code will be translated by ERmodel2.svg.xslt -->             
                   <!-- 16 August 2022 - UPGRADED to latest metamodel  cardinality but note code wasn't correct to start with -->
           <scope_display_text>
              <xsl:value-of select="concat('d:',riser/*/display_text,'=s:',diagonal/*/display_text)"/>
              <!-- was        <xsl:value-of select="concat('~/',riser/*/display_text,'=',diagonal/*/display_text)"/> -->
+             <!-- In future would we   want to type the * in riser/*/display_text to ease
+                  static checking. On the otherhand the dest of riser is known to be navigation.
+                  The above is equivalent to
+                       riser/*[self::navigation]/display_text
+                  Except that need to replace navigation by all its concrete subtypes.0
+                  Arguably writing it that way might look we were applying a filter which we are not.
+                  Question: in macro language should I not write riser/display_text and
+                  know that the intermediate * will be generated in the xpath. Because the /
+                  is not then the zptha ? then maybe we should surround each navigation by #'s'
+                  and write the command macro as
+                  "concat('d:',#riser/display_text#,'=s:',#diagonal/display_text#)"   
+             -->
           </scope_display_text>
   </xsl:copy>
 </xsl:template>
@@ -313,12 +390,19 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
               mode="initial_enrichment_recursive"
               priority="7">
   <xsl:copy>
-    <xsl:apply-templates mode="initial_enrichment_recursive"/>
+    <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
         <host_type>
             <xsl:for-each select="key('IncomingCompositionRelationships', ../../name)/..">
                <xsl:value-of select="if (self::absolute) then '' else name"/>
             </xsl:for-each>
         </host_type>
+        <!-- host_type is defined as
+                parent::reference/src/incoming_composition_relationships/src/
+                                                  (if (self::absolute) then '' else name
+           The assumption is that there is only one incoming composition relationship. 
+           This could be policed to some extent by making the inverse to prjection_rel single valued?
+           host_type is used in xpath enrichment in support for pullbacks.
+        -->
   </xsl:copy>
 </xsl:template>
 
@@ -329,10 +413,17 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
               priority="8"
               mode="initial_enrichment_recursive">
    <xsl:copy>
-      <xsl:apply-templates mode="initial_enrichment_recursive"/>
+      <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
       <display_text>
          <xsl:value-of select="'.'"/>
       </display_text>
+     <!--becomes
+      <optional>
+        <default>
+            <macro>'.'</macro>
+        </default>
+      </optional>
+      -->
    </xsl:copy>
 </xsl:template>
 
@@ -342,10 +433,11 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
               priority="9"
               mode="initial_enrichment_recursive">
    <xsl:copy>
-      <xsl:apply-templates mode="initial_enrichment_recursive"/>
+      <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
       <display_text>
          <xsl:value-of select="'^'"/>
       </display_text>
+      <!-- similar to previous -->
    </xsl:copy>
 </xsl:template>
 
@@ -356,10 +448,16 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
                      priority="10"
                      mode="initial_enrichment_recursive">
    <xsl:copy>
-      <xsl:apply-templates mode="initial_enrichment_recursive"/>
+      <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
       <display_text>
          <xsl:value-of select="string-join(component/display_text,'/')"/>
       </display_text>
+      <!-- becomes -->
+      <optional>
+        <default>
+           <macro>string-join(#component/display_text#,'/')</macro>
+        </default>
+      </optional>
    </xsl:copy>
 </xsl:template>
 
@@ -368,24 +466,83 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
                      priority="11"
                      mode="initial_enrichment_recursive">
    <xsl:copy>
-      <xsl:apply-templates mode="initial_enrichment_recursive"/>
+      <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
       <display_text>
          <xsl:value-of select="rel"/>
       </display_text>
+      <!-- oooooo - this will be ambiguous in macro language - is rel the relationship
+                     or the foreign key attribute? 
+                     Get away with it in this case we can represent as
+      <optional>
+        <default>
+           <macro>rel</macro>            ............ note no use of #'s'
+        </default>
+      </optional>
+
+      Could also ignore the foreign key and specify more sematically(though less efficient)
+      <optional>
+        <default>
+           <macro>#rel/name#</macro>        
+        </default>
+      </optional>   
+
+      Consider though use of % for all attributes. 
+      -->
    </xsl:copy>
 </xsl:template>
 
-<!-- changes to attributes of identity have not been tested --> 
+<!-- There follows 4 templates to define src for identity and the absolute --> 
+<!-- BUT I don't see how it is defined in the case that the incoming composition
+     relationship is the 'key' relationship from 'reference' 
+     a BUG?
+-->
+<!-- I need a way of modelling these rules. -->
+<!-- it feels strange but I need to identify the incoming composition relationship 
+     this I can do using inverse. Made harder because the composition
+     from constructed relationship is undefined so how can I test its inverse.
+     Cases are
+     inverse(along)                  +> inverse(along)/type
+     inverse(riser2)                 +> inverse(riser2)/type
+     ../[constructed_relationship]   +> ..[constructed_relationship]/src
+     inverse(diagonal)               +> inverse(diagonal)/src
+     inverse(riser)                  +> inverse(riser)/type
+     inverse(key)                         ... this case is missing (and I cant remember what 
+                                                        concept of key is this!!)
+                                                        /key seems to be used as part of building
+                                                        xpath_local_key in xpath_enichment.
+     -->  
 <xsl:template match="along/*[self::identity|self::theabsolute]
                      [not(src)]
                      " 
               priority="12"
               mode="initial_enrichment_recursive">
    <xsl:copy>
-      <xsl:apply-templates mode="initial_enrichment_recursive"/>
+      <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
       <src>
          <xsl:value-of select="ancestor::entity_type/name"/>
       </src>
+      <!-- no need to # this -->
+      <!-- we are setting the value of a reference relationship
+           here by setting the foreign key attribute 
+           <attribute>
+                <name>src</name>
+                <optional>
+                    <default>
+                       <macro>ancestor::entity_type/name</macro>
+                    </default>
+                </optional> 
+            </attribute>
+            better would be to specify the reference relationship value directly
+            <reference>
+                <name>src</name>
+                ...
+                <default>
+                     ancestor::entity_type
+                </default>
+            </reference>
+            From the latter rule the former rule can be auto generated during logical2physical.
+            Excellent. 
+        -->
    </xsl:copy>
 </xsl:template>
 
@@ -395,7 +552,7 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
               priority="13"
               mode="initial_enrichment_recursive">
    <xsl:copy>
-      <xsl:apply-templates mode="initial_enrichment_recursive"/>
+      <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
       <src>
          <xsl:value-of select="(ancestor::pullback|ancestor::copy)/type"/>
       </src>
@@ -408,39 +565,29 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
               priority="14"
               mode="initial_enrichment_recursive">
    <xsl:copy>
-      <xsl:apply-templates mode="initial_enrichment_recursive"/>
+      <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
       <src>
-         <xsl:value-of select="ancestor::reference[1]/type"/>
+         <xsl:value-of select="ancestor::reference[1]/type"/> 
       </src>
    </xsl:copy>
 </xsl:template>
 
+<!-- match below doesn't look right ... this is because one composition (diagonal) is
+      named and one is not but leads straight from constructed relationship -->
 <xsl:template match="*[self::diagonal|self::constructed_relationship]/*[self::identity|self::theabsolute]
                      [not(src)]
                      " 
               priority="15"
               mode="initial_enrichment_recursive">
    <xsl:copy>
-      <xsl:apply-templates mode="initial_enrichment_recursive"/>
+      <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
       <src>
          <xsl:value-of select="ancestor::entity_type[1]/name"/>
       </src>
    </xsl:copy>
 </xsl:template>
 
- <xsl:template match="identity
-                      [not(dest)]
-                      [src]
-                      " 
-               priority="16"
-               mode="initial_enrichment_recursive">
-   <xsl:copy> 
-      <xsl:apply-templates mode="initial_enrichment_recursive"/>
-      <dest>
-         <xsl:value-of select="src"/>
-      </dest>
-   </xsl:copy>
-</xsl:template>
+<!-- end of 4 templates to define src for identity and the absolute --> 
 
 <xsl:template match="join
                      [not(src)]
@@ -449,42 +596,10 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
               priority="17"
               mode="initial_enrichment_recursive">
    <xsl:copy>
-      <xsl:apply-templates mode="initial_enrichment_recursive"/>     
+      <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>     
       <src>
          <xsl:value-of select="component[1]/src"/>
       </src>
-   </xsl:copy>
-</xsl:template>
-
- <xsl:template match="join
-                      [not(dest)]
-                      [component[last()]/dest]
-                      " 
-               priority="18"
-               mode="initial_enrichment_recursive">
-   <xsl:copy> 
-      <xsl:apply-templates mode="initial_enrichment_recursive"/>
-      <dest>
-         <xsl:value-of select="component[last()]/dest"/>
-      </dest>
-   </xsl:copy>
-</xsl:template>
-
-<xsl:template match="join
-                     [not(identification_status)]
-                     [every $component in component satisfies $component/identification_status]" 
-              priority="19"
-              mode="initial_enrichment_recursive">
-   <xsl:copy>
-      <xsl:apply-templates mode="initial_enrichment_recursive"/>
-      <identification_status>
-            <xsl:value-of select="if (every $component in component 
-                                      satisfies ($component/identification_status = 'Identifying')
-                                     )
-                                  then 'Identifying'
-                                  else 'NotIdentifying'
-                                 "/>
-      </identification_status>
    </xsl:copy>
 </xsl:template>
 
@@ -496,7 +611,7 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
                      priority="20"
                      mode="initial_enrichment_recursive">
    <xsl:copy>
-      <xsl:apply-templates mode="initial_enrichment_recursive"/>    
+      <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>    
       <xsl:choose>
          <xsl:when test="ancestor::along">
             <src>
@@ -529,12 +644,61 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
                      priority="21"
                      mode="initial_enrichment_recursive">
    <xsl:copy>
-      <xsl:apply-templates mode="initial_enrichment_recursive"/>
+      <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
       <src>
          <xsl:value-of select="preceding-sibling::component[1]/dest"/>
       </src>
    </xsl:copy>
 </xsl:template>
+
+<!-- now so many for <dest> -->
+
+ <xsl:template match="identity
+                      [not(dest)]
+                      [src]
+                      " 
+               priority="16"
+               mode="initial_enrichment_recursive">
+   <xsl:copy> 
+      <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
+      <dest>
+         <xsl:value-of select="src"/>
+      </dest>
+   </xsl:copy>
+</xsl:template>
+
+ <xsl:template match="join
+                      [not(dest)]
+                      [component[last()]/dest]
+                      " 
+               priority="18"
+               mode="initial_enrichment_recursive">
+   <xsl:copy> 
+      <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
+      <dest>
+         <xsl:value-of select="component[last()]/dest"/>
+      </dest>
+   </xsl:copy>
+</xsl:template>
+
+<xsl:template match="join
+                     [not(identification_status)]
+                     [every $component in component satisfies $component/identification_status]" 
+              priority="19"
+              mode="initial_enrichment_recursive">
+   <xsl:copy>
+      <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
+      <identification_status>
+            <xsl:value-of select="if (every $component in component 
+                                      satisfies ($component/identification_status = 'Identifying')
+                                     )
+                                  then 'Identifying'
+                                  else 'NotIdentifying'
+                                 "/>
+      </identification_status>
+   </xsl:copy>
+</xsl:template>
+
 
 <xsl:template match="component
                      [not(dest)]
@@ -543,7 +707,7 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
                      priority="22"
                      mode="initial_enrichment_recursive">
    <xsl:copy>
-      <xsl:apply-templates mode="initial_enrichment_recursive"/>
+      <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
          <dest>
             <xsl:value-of select="key('AllRelationshipBySrcTypeAndName',
                                       era:packArray((src,rel)))
@@ -559,7 +723,7 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
                      priority="23"
                      mode="initial_enrichment_recursive">
    <xsl:copy>
-      <xsl:apply-templates mode="initial_enrichment_recursive"/>
+      <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
       <identification_status>   
          <xsl:value-of select="if(key('AllRelationshipBySrcTypeAndName',
                                             era:packArray((src,rel)))
@@ -572,4 +736,3 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
 </xsl:template>
 
 </xsl:transform>
-

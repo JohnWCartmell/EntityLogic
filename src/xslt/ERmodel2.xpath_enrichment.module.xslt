@@ -13,7 +13,7 @@ DESCRIPTION
          xpath_qualified_type_classifier : string
 
       entity_type =>
-         xpath_type_qualifier :string,  # for a concrete type this is the 
+         xpath_type_classifier :string,  # for a concrete type this is the 
                                         # element name
                                         # for an abstract type it is
                                         # the pattern A|B|C ...

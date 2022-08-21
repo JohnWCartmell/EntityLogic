@@ -6,9 +6,11 @@ CALL %ERSCRIPTv1%/ERmodel_v1.4/scripts/gen_downgrade_to_v1.3.bat %SUBJECTNAMEBAS
 
 call %ERSCRIPTv1%/ERmodel_v1.4/scripts/set_path_variables
 
+java -jar %SAXON_PATH%\saxon9he.jar -s:..\temp\%SUBJECTNAMEBASE%.xml -xsl:%ERHOME%\xslt\ERmodel2.svg.xslt -o:..\docs\%SUBJECTNAMEBASE%.svg filestem=%SUBJECTNAMEBASE%
+
 java -jar %SAXON_PATH%\saxon9he.jar -s:..\temp\%SUBJECTNAMEBASE%.xml -xsl:%ERHOME%\xslt\ERmodel2.physical.xslt -o:..\temp\%SUBJECTNAMEBASE%.hierarchical.xml style=hs
 
-java -jar %SAXON_PATH%\saxon9he.jar -s:..\temp\%SUBJECTNAMEBASE%.hierarchical.xml -xsl:%ERHOME%\xslt\ERmodel2.svg.xslt -o:..\docs\%SUBJECTNAMEBASE%.hierarchical.svg filestem=%filenamebase%.hierarchical
+java -jar %SAXON_PATH%\saxon9he.jar -s:..\temp\%SUBJECTNAMEBASE%.hierarchical.xml -xsl:%ERHOME%\xslt\ERmodel2.svg.xslt -o:..\docs\%SUBJECTNAMEBASE%.hierarchical.svg filestem=%SUBJECTNAMEBASE%.hierarchical
 
 
 echo FINALLY NEED TO GENERATE rng

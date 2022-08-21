@@ -146,8 +146,7 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
   </xsl:copy>
 </xsl:template>
 
-<xsl:template match="entity_model"
-              mode="initial_enrichment_first_pass"> 
+<xsl:template match="entity_model"> 
   <xsl:copy>
     <!-- add prefixes for namespaces -->
     <xsl:namespace name="xs" select="'http://www.w3.org/2001/XMLSchema'"/>
