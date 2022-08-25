@@ -111,6 +111,14 @@
                <data type="string"
                      datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
             </element>
+            <element>
+               <name>identifier</name>
+               <data type="" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+            </element>
+            <element>
+               <name>elementName</name>
+               <data type="" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+            </element>
             <optional>
                <element>
                   <name>description</name>
@@ -183,6 +191,18 @@
                <name>name</name>
                <data type="string"
                      datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+            </element>
+            <element>
+               <name>identifier</name>
+               <data type="" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+            </element>
+            <element>
+               <name>elementName</name>
+               <data type="" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+            </element>
+            <element>
+               <name>parentType</name>
+               <data type="" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
             </element>
             <optional>
                <element>
@@ -528,6 +548,20 @@
             <optional>
                <element>
                   <name>xpath_evaluate</name>
+                  <data type="string"
+                        datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+               </element>
+            </optional>
+            <optional>
+               <element>
+                  <name>xpath__defaults_to__calculation</name>
+                  <data type="string"
+                        datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+               </element>
+            </optional>
+            <optional>
+               <element>
+                  <name>xpath__calculation_precondition</name>
                   <data type="string"
                         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
                </element>
@@ -1059,8 +1093,68 @@
       </element>
    </define>
    <define name="component" ns="http://www.entitymodelling.org/ERmodel">
+      <choice>
+         <ref name="follow"/>
+         <ref name="inverse"/>
+      </choice>
+   </define>
+   <define name="follow" ns="http://www.entitymodelling.org/ERmodel">
       <element>
-         <name>component</name>
+         <name>follow</name>
+         <interleave>
+            <optional>
+               <oneOrMore>
+                  <element>
+                     <name>include</name>
+                     <element>
+                        <name>filename</name>
+                        <data type="string"
+                              datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+                     </element>
+                     <optional>
+                        <element>
+                           <name>type</name>
+                           <data type="string"
+                                 datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+                        </element>
+                     </optional>
+                  </element>
+               </oneOrMore>
+            </optional>
+            <optional>
+               <element>
+                  <name>src</name>
+                  <data type="string"
+                        datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+               </element>
+            </optional>
+            <optional>
+               <element>
+                  <name>dest</name>
+                  <data type="string"
+                        datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+               </element>
+            </optional>
+            <optional>
+               <element>
+                  <name>xpath_evaluate</name>
+                  <data type="string"
+                        datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+               </element>
+            </optional>
+            <optional>
+               <element>
+                  <name>rel</name>
+                  <data type="string"
+                        datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+               </element>
+            </optional>
+         </interleave>
+      </element>
+   </define>
+   <define name="inverse" ns="http://www.entitymodelling.org/ERmodel">
+      <element>
+         <name>inverse</name>
          <interleave>
             <optional>
                <oneOrMore>
@@ -1352,10 +1446,20 @@
             </optional>
             <optional>
                <element>
-                  <name>value</name>
+                  <name>default__xpath_calculation</name>
                   <data type="string"
                         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
                </element>
+            </optional>
+            <optional>
+               <element>
+                  <name>default__xpath_calculation_precondition</name>
+                  <data type="string"
+                        datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+               </element>
+            </optional>
+            <optional>
+               <ref name="value_expression"/>
             </optional>
          </interleave>
       </element>
@@ -1364,6 +1468,128 @@
       <element>
          <name>deprecated</name>
          <empty/>
+      </element>
+   </define>
+   <define name="value_expression" ns="http://www.entitymodelling.org/ERmodel">
+      <choice>
+         <ref name="constantvalue"/>
+         <ref name="apply_fn"/>
+         <ref name="workother"/>
+      </choice>
+   </define>
+   <define name="constantvalue" ns="http://www.entitymodelling.org/ERmodel">
+      <element>
+         <name>constantvalue</name>
+         <empty/>
+      </element>
+   </define>
+   <define name="apply_fn" ns="http://www.entitymodelling.org/ERmodel">
+      <element>
+         <name>apply_fn</name>
+         <empty/>
+      </element>
+   </define>
+   <define name="workother" ns="http://www.entitymodelling.org/ERmodel">
+      <choice>
+         <ref name="fetch"/>
+         <ref name="sum"/>
+         <ref name="count"/>
+      </choice>
+   </define>
+   <define name="fetch" ns="http://www.entitymodelling.org/ERmodel">
+      <element>
+         <name>fetch</name>
+         <interleave>
+            <optional>
+               <oneOrMore>
+                  <element>
+                     <name>include</name>
+                     <element>
+                        <name>filename</name>
+                        <data type="string"
+                              datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+                     </element>
+                     <optional>
+                        <element>
+                           <name>type</name>
+                           <data type="string"
+                                 datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+                        </element>
+                     </optional>
+                  </element>
+               </oneOrMore>
+            </optional>
+            <element>
+               <name>destattr</name>
+               <data type="string"
+                     datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+            </element>
+            <ref name="navigation"/>
+         </interleave>
+      </element>
+   </define>
+   <define name="sum" ns="http://www.entitymodelling.org/ERmodel">
+      <element>
+         <name>sum</name>
+         <interleave>
+            <optional>
+               <oneOrMore>
+                  <element>
+                     <name>include</name>
+                     <element>
+                        <name>filename</name>
+                        <data type="string"
+                              datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+                     </element>
+                     <optional>
+                        <element>
+                           <name>type</name>
+                           <data type="string"
+                                 datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+                        </element>
+                     </optional>
+                  </element>
+               </oneOrMore>
+            </optional>
+            <element>
+               <name>destattr</name>
+               <data type="string"
+                     datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+            </element>
+            <ref name="navigation"/>
+         </interleave>
+      </element>
+   </define>
+   <define name="count" ns="http://www.entitymodelling.org/ERmodel">
+      <element>
+         <name>count</name>
+         <interleave>
+            <optional>
+               <oneOrMore>
+                  <element>
+                     <name>include</name>
+                     <element>
+                        <name>filename</name>
+                        <data type="string"
+                              datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+                     </element>
+                     <optional>
+                        <element>
+                           <name>type</name>
+                           <data type="string"
+                                 datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+                        </element>
+                     </optional>
+                  </element>
+               </oneOrMore>
+            </optional>
+            <element>
+               <name>destattr</name>
+               <data type="string"
+                     datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+            </element>
+            <ref name="navigation"/>
+         </interleave>
       </element>
    </define>
    <define name="xmlStyle_2" ns="http://www.entitymodelling.org/ERmodel">

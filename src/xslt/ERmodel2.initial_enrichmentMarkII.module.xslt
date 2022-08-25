@@ -163,7 +163,7 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
 </xsl:template>
 
 <!-- recursive enrichment starts here -->
-<!-- FOLOWING HAS BEEN RECODED IN meta model -->
+<!-- FOLLOWING HAS BEEN RECODED IN meta model -->
 <xsl:template match="*[self::absolute|self::entity_type]
                      [not(identifier)]
                      "
@@ -318,6 +318,10 @@ COMMENT OUT AND FIND OUT
        to physical allright with keyless relationships like this one.
        Also we are going to have to split the identifying entity type in two. 
        One on left underneath dependency and one on right beneath composition.
+       See also identification_status below.
+       One possibility is not to actualise(store)(cache?) but simply to evaluate 
+       as and when required. 
+      
   -->  
   <xsl:copy>
       <identifying/>
@@ -589,6 +593,11 @@ COMMENT OUT AND FIND OUT
 
 <!-- end of 4 templates to define src for identity and the absolute --> 
 
+<!-- Now there are a further 3 templates defining src.
+      1 defines src for join
+      2 define src for component -->      
+
+
 <xsl:template match="join
                      [not(src)]
                      [component[1]/src]
@@ -600,6 +609,28 @@ COMMENT OUT AND FIND OUT
       <src>
          <xsl:value-of select="component[1]/src"/>
       </src>
+      <!-- This is setting the value of a foreign key but ought to be specified
+           relationally as
+           <reference>
+               <name>src</name>
+               <case><test>[component]</test> <default>src</default></case>
+               ...
+           </reference>
+           or some thing like is I nest the cases within the major definition
+           What bugs me is whether to organise the language organising the
+           defaults for subtypes with the definition of the relationship or
+           attribute or whether to add to the logic of the attribute within 
+           auxiliary defintions of implicit subtypes. The latter is more object oriented.
+           Some aspects of the major definition being deferred to subtypes.
+           I guess could support both. 
+           For this discussion:
+           theabsolute, join, identity, component are _explicit subtypes_ of navigation
+           [inverse(riser)], say, is an _implicit subtype_
+           In the debate whether to represent the logic in subtype aor in case statement 
+           on a superior type the balance is probable toward putting in the logic in
+           explicit sub types but not implicit subtypes. 
+
+      -->
    </xsl:copy>
 </xsl:template>
 
@@ -617,21 +648,31 @@ COMMENT OUT AND FIND OUT
             <src>
                <xsl:value-of select="ancestor::entity_type/name"/>
             </src>
+            <!-- represents the src entity type of the composition relationship is
+                 designated as  pullback.
+                 It would be easier to read as
+                 <default>#inverse(along)/parent/src#</default>
+                 which if I might intersperse with type information so:
+                 <default>#inverse(along)%[initialiser]%/parent%[composition]%/src%entity_type%#</default>
+            -->
          </xsl:when>
          <xsl:when test="ancestor::riser2">
             <src>
                <xsl:value-of select="(ancestor::pullback|ancestor::copy)/type"/>
             </src>
+            <!-- <default># inverse(riser2)/type #</default> -->
          </xsl:when>
          <xsl:when test="ancestor::riser">
             <src>
                <xsl:value-of select="ancestor::reference[1]/type"/>
             </src>
+            <!-- <default># inverse(riser)/type #</default> -->
          </xsl:when>
          <xsl:otherwise>  <!-- diagonal or constructed relationship -->
             <src>
                <xsl:value-of select="ancestor::entity_type[1]/name"/>
             </src>
+             <!-- <default># (inverse(diagonal)|..[constructed_relationship])/src #</default> -->
          </xsl:otherwise>
       </xsl:choose>
    </xsl:copy>
@@ -651,6 +692,48 @@ COMMENT OUT AND FIND OUT
    </xsl:copy>
 </xsl:template>
 
+<!-- end of two templates defining src for component. -->
+<!-- summarise thus: -->
+<entity_type>
+    <name>component</name>
+    ...
+    <deferred>
+         <reference>
+             <name>src</name>
+             <default>
+                <case><test>preceding-sibling::component[1]</test>           
+                      <value>#preceding-sibling::component[1]/dest#</value>
+                </case>
+                <case>
+                    <test>not(preceding-sibling::component)</test>         
+                    <case>
+                        <test>inverse(along)</test>
+                        <value>#inverse(along)/parent%composition%/src#</value>
+                    </case>
+                    <case>
+                        <test>inverse(riser2)</test>
+                        <value>#inverse(riser2)/type#</value>
+                    </case>
+                    <case>
+                        <test>inverse(riser)</test>
+                        <value>#inverse(riser)/type#</value>
+                    </case>
+                    <case>
+                        <test>inverse(diagonal)|parent[constructed_relationship]</test>
+                        <value>#(inverse(diagonal)|parent[constructed_relationship])/src#</value>
+                        <!-- BTW can aggregate these because 
+                        (inverse(diagonal)|parent[constructed_relationship]) : Relationship
+                        and src is inherited from entity type Relationship
+                        -->
+                    </case>
+                </case>
+             </default>
+        </reference>
+    </deferred>
+
+
+<!-- End of templates defining src
+
 <!-- now so many for <dest> -->
 
  <xsl:template match="identity
@@ -664,6 +747,16 @@ COMMENT OUT AND FIND OUT
       <dest>
          <xsl:value-of select="src"/>
       </dest>
+      <!--  
+        <entity_type>
+           <name>identity</name>
+           <reference>
+               <name>dest</name>
+               <deferredFrom>navigation</deferredFrom>
+               <value>#src#</value>
+            </reference>
+        </entity_type>
+      -->
    </xsl:copy>
 </xsl:template>
 
@@ -678,24 +771,17 @@ COMMENT OUT AND FIND OUT
       <dest>
          <xsl:value-of select="component[last()]/dest"/>
       </dest>
-   </xsl:copy>
-</xsl:template>
-
-<xsl:template match="join
-                     [not(identification_status)]
-                     [every $component in component satisfies $component/identification_status]" 
-              priority="19"
-              mode="initial_enrichment_recursive">
-   <xsl:copy>
-      <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
-      <identification_status>
-            <xsl:value-of select="if (every $component in component 
-                                      satisfies ($component/identification_status = 'Identifying')
-                                     )
-                                  then 'Identifying'
-                                  else 'NotIdentifying'
-                                 "/>
-      </identification_status>
+       <!--  
+        <entity_type>
+           <name>join</name>
+           <reference>
+               <name>dest</name>
+               <deferredFrom>navigation</deferredFrom>
+               <value>#component[last()]/dest#</value> ... must need add last() 
+                                                       ... to navigation model 
+            </reference>
+        </entity_type>
+        -->
    </xsl:copy>
 </xsl:template>
 
@@ -713,6 +799,40 @@ COMMENT OUT AND FIND OUT
                                       era:packArray((src,rel)))
                                   /type"/>
          </dest>
+        <!--  
+        <entity_type>
+           <name>component</name>
+           <reference>
+               <name>dest</name>
+               <deferredFrom>navigation</deferredFrom>
+               <value>#rel/type#</value> 
+            </reference>
+        </entity_type>
+        -->
+   </xsl:copy>
+</xsl:template>
+
+<!-- Two templates for
+             complex => identification_status
+    This is pretty ugly because we have remodelled  the idea of an
+    optional identifying flag just because we wanted
+    to implement using recurive incremental enrichment.
+-->
+<xsl:template match="join
+                     [not(identification_status)]
+                     [every $component in component satisfies $component/identification_status]" 
+              priority="19"
+              mode="initial_enrichment_recursive">
+   <xsl:copy>
+      <xsl:apply-templates select="@*|node()" mode="initial_enrichment_recursive"/>
+      <identification_status>
+            <xsl:value-of select="if (every $component in component 
+                                      satisfies ($component/identification_status = 'Identifying')
+                                     )
+                                  then 'Identifying'
+                                  else 'NotIdentifying'
+                                 "/>
+      </identification_status>
    </xsl:copy>
 </xsl:template>
 
