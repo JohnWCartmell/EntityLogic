@@ -50,10 +50,13 @@ Contains a rudimentary xslt transformations for
 * already includes derived (constructed) relationships and supports use of constructed relationships in xpath by way of such as the (derived) attribute xpath_evaluate.
 * *xpath_evaluate*  
   * assumes existence of keys for entity types (including abstract entity types one would think) 
-   * assumes, therefore, use from xslt  
+   * assumes, therefore, use from xslt  (this could change however because I see that the latest Saxon xslt optimises xslt evaluation by building and using desirable keys -- can therefore perhaps remove use of explicit use of keys without taking a performance hit)
 * question: how much work would it be to bootstrap xpath evaluate.
 * question: if we do a bootstrap of xpath-evaluate how much freedom do we have in how we use it are we
   * limited to a static enrichment of a model by its derived features, or are we
   * able to include the derivation of attributes and relatuionships in much more comprehensive transformations such as the gemneration of code or of diagrams.  
 * we should try and enable 2. for this will not rule out 1. which maybe useful for debugging and for documentation.
 * use of the xpath 3.0 xsl:evaluate will ease the number of xslt passes required in the support of derived attributes which have values defined by xpath expressions rather than fine grain model. Example  attribute 'elementName' which is constructed by the ERmodel2.physical transformation in file ERmodel2.initial_enrichment_module.xslt.
+
+
+

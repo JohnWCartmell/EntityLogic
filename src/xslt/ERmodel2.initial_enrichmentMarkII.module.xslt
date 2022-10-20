@@ -9,9 +9,23 @@
                        where D is Destination and S is Source
 16-Aug-2022 J.Cartmell UPGRADED to latest metamodel  regarding cardinality and attribute 
 16-Aug-2022 J Cartmell Recode into a pure style - one attribute per template.
-                       Merge initial pass and recursive pass into a single recursive path.
-                       Do this incrementally moving one or two attributes at a time into recurivse path.
-                       Change to enable a trace attribute to be generated and preserved.
+                       Mostly merge initial pass and recursive pass into a single recursive path.
+                       What remains in first pass is just the  addition of namespace definitions
+                       (do we want to move this logic into recursive pass also?)
+                       With the intention of supporting debugging modify to enable an xml attribute 
+                       named trace to be generated and preserved.
+-->
+<!--
+ DISCUSSION POINTS 
+ (1) In future this first enrichment of a 
+     logical entity model should complete missing detail inferred by 
+     the model. Examples might be creating inverses to relationships,
+     adding default cardinalities, creating composition relationships 
+     from depndency relationships.
+ (2) In future much of this can be generated from defintions of
+     derived attributes in the meta-model ERmodelERmodel.
+     Some of these derived attributes have been marked up in comments below.
+     The idea of a macro language for use in ther metamodel emerges.
 -->
 
 <!-- 
@@ -70,14 +84,7 @@ Description
       join | component => identification_status : ('Identifying', 'NotIdentifying')
 
             
- DISCUSSION POINTS 
- (1) In future this first enrichment of a 
-     logical entity model should complete missing detail inferred by 
-     the model. Examples might be creating inverses to relationships,
-     adding default cardinalities, creating composition relationships 
-     from depndency relationships.
- (2) In future much of this can be generated from defintions of
-     derived attributes in the meta-model ERmodelERmodel.
+
     
 CHANGE HISTORY
 CR-18553 JC  19-Oct-2016 Created
@@ -181,7 +188,10 @@ CR-19407 JC 20-Feb-2017 Creation of seqNo attributews moved out into physical en
   </xsl:copy>
 </xsl:template>
 
-<!-- FOLOWING HAS BEEN RECODED IN meta model -->
+<!-- FOLLOWING HAS BEEN RECODED IN meta model -->
+<!-- added somewhat later (Oct 2022) What I guess I mean by the above comment is that
+     elementName has been added as a derived attribute in the file EntityLogicMetaModel.xml
+-->
 <xsl:template match="*[self::absolute|self::entity_type]
                       [not(elementName)]
                       " mode="initial_enrichment_recursive"
@@ -456,12 +466,13 @@ COMMENT OUT AND FIND OUT
       <display_text>
          <xsl:value-of select="string-join(component/display_text,'/')"/>
       </display_text>
-      <!-- becomes -->
+      <!-- becomes
       <optional>
         <default>
            <macro>string-join(#component/display_text#,'/')</macro>
         </default>
       </optional>
+      -->
    </xsl:copy>
 </xsl:template>
 
